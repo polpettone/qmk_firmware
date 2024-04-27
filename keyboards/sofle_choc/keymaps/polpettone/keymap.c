@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include QMK_KEYBOARD_H
+#include "debug.h"
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
@@ -38,7 +39,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     KC_TAB,   KC_Q,   KC_W,    KC_E,   KC_R,    KC_T,                           KC_Y,     KC_U,     KC_I,    KC_O,    KC_P,    KC_BSPC,
     KC_LSFT,  KC_A,   KC_S,    KC_D,   KC_F,    KC_G,                           KC_H,     KC_J,     KC_K,    KC_L,    KC_SCLN, KC_QUOT,
     KC_LCTL,  KC_Z,   KC_X,    KC_C,   KC_V,    KC_B,      KC_MUTE,    KC_MPLY, KC_N,     KC_M,     KC_COMM, KC_DOT,  KC_SLSH, KC_BSLS,
-                      KC_CAPS, TG(1),  KC_LALT, KC_LGUI,   KC_SPC,    KC_ENT , KC_EQL,   KC_MINS,  KC_LBRC, KC_RBRC
+                      KC_CAPS, TG(1),  KC_LALT, KC_LGUI,   KC_SPC,     KC_ENT,  KC_EQL,   KC_MINS,  KC_LBRC, KC_RBRC
 ),
 
 /*
@@ -58,10 +59,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  */
 
 [1] = LAYOUT(
-    KC_GRV,   KC_TRNS,   KC_2,    KC_3,    KC_4,      KC_5,                          KC_6,     KC_7,     KC_8,    KC_0,     KC_9,    KC_0,
-    KC_ESC,   KC_TRNS,   KC_W,    KC_E,    KC_R,      KC_T,                          KC_Y,     KC_U,     KC_I,    KC_O,     KC_EQL,  KC_MINS,
-    KC_TAB,   KC_TRNS,   KC_S,    KC_D,    KC_F,      KC_G,                          KC_LEFT,  KC_DOWN,  KC_UP,   KC_RIGHT, KC_SCLN, KC_QUOT,
-    KC_LSFT,  KC_TRNS,   KC_X,    KC_C,    KC_V,      KC_B,       KC_MUTE,  KC_MPLY, KC_N,     KC_M,     KC_COMM, KC_DOT,   KC_SLSH, KC_TRNS,
+    KC_TRNS,   KC_TRNS,   KC_2,    KC_3,    KC_4,      KC_5,                          KC_6,     KC_7,     KC_8,    KC_0,     KC_9,    KC_0,
+    KC_TRNS,   KC_TRNS,   KC_W,    KC_E,    KC_R,      KC_T,                          KC_Y,     KC_U,     KC_I,    KC_O,     KC_EQL,  KC_MINS,
+    KC_TRNS,   KC_TRNS,   KC_S,    KC_D,    KC_F,      KC_G,                          KC_LEFT,  KC_DOWN,  KC_UP,   KC_RIGHT, KC_SCLN, KC_QUOT,
+    KC_TRNS,   KC_TRNS,   KC_X,    KC_C,    KC_V,      KC_B,       KC_MUTE,  KC_MPLY, KC_N,     KC_M,     KC_COMM, KC_DOT,   KC_SLSH, KC_TRNS,
                          KC_RALT, TG(1),   KC_TRNS,  KC_TRNS,   KC_SPC,   KC_ENT,  KC_TRNS,  KC_TRNS,  KC_TRNS, KC_TRNS
 )
 
@@ -74,31 +75,28 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 };
 #endif
 
+bool lightToggle = false;
 
-enum sofle_layers {
-    /* _M_XYZ = Mac Os, _W_XYZ = Win/Linux */
-    _QWERTY,
-    _COLEMAK,
-    _LOWER,
-    _RAISE,
-    _ADJUST,
-};
-
-static void print_status_narrow(void) {
-    switch (get_highest_layer(default_layer_state)) {
-        case _QWERTY:
-            oled_write_ln_P(PSTR("Qwrt"), false);
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    switch (keycode) {
+        case TG(0):
+            if (record->event.pressed) {
+                layer_state_set_user(layer_state);  // Setze den Layer auf 1
+                rgblight_sethsv(100, 255, 255);
+            }
             break;
-        case _COLEMAK:
-            oled_write_ln_P(PSTR("Clmk"), false);
+        case TG(1):
+            if (record->event.pressed) {
+                layer_state_set_user(layer_state);
+                if(lightToggle) {
+                    rgblight_sethsv(150, 255, 255);
+                    lightToggle = false;
+                } else {
+                    rgblight_sethsv(50, 255, 255);
+                    lightToggle = true;
+                }
+            }
             break;
-        default:
-            oled_write_P(PSTR("Undef"), false);
     }
-}
-
-bool oled_task_user(void) {
-    print_status_narrow();
     return true;
 }
-
